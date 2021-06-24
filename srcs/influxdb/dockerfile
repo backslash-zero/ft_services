@@ -1,0 +1,25 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Dockerfile                                         :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: celestin <celestin@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2021/06/11 19:49:32 by celestin          #+#    #+#              #
+#    Updated: 2021/06/17 12:31:58 by celestin         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
+FROM 		alpine:latest
+
+LABEL		maintainer="Célestin (cmeunier@42.fr)"
+
+RUN			apk update							&& \
+			apk add influxdb					&& \
+			rm -rf /var/cache/apk/*
+
+COPY		srcs/exec/run.sh /usr/sbin/
+
+EXPOSE      8086
+
+ENTRYPOINT [ "run.sh" ]

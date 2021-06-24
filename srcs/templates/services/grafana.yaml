@@ -1,0 +1,84 @@
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-deployment
+  labels:
+    app: grafana
+spec:
+  selector:
+    matchLabels:
+      app: grafana-pod
+  template:
+    metadata:
+      labels:
+        app: grafana-pod
+    spec:
+      containers:
+      - name: grafana
+        image: ft_services_grafana
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+          name: graf-cont-port
+        env:
+        - name: GRAFANA_ADMIN
+          valueFrom:
+            secretKeyRef:
+              name: grafana-secret
+              key: grafana-admin
+        - name: GRAFANA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-secret
+              key: grafana-password
+        - name: GRAFANA_SECRETKEY
+          valueFrom:
+            secretKeyRef:
+              name: grafana-secret
+              key: grafana-secret-key
+        - name: INFLUXDB_USER
+          valueFrom:
+            secretKeyRef:
+              name: grafana-secret
+              key: influxdb-user
+        - name: INFLUXDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-secret
+              key: influxdb-password
+        - name: GRAFANA_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: grafana-configmap
+              key: grafana-port
+        - name: GRAFANA_IP
+          value: $EXTERNAL_IP
+        - name: INFLUXDB_URL
+          value: http://influxdb-service:8086
+        - name: INFLUXDB_DBNAME
+          valueFrom:
+            configMapKeyRef:
+              name: grafana-configmap
+              key: influxdb-dbname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  annotations:
+    metallb.universe.tf/allow-shared-ip: "ft_services_sharing_key"
+  labels:
+    app: grafana
+spec:
+  selector:
+    app: grafana-pod
+  type: LoadBalancer
+  loadBalancerIP: $EXTERNAL_IP
+  ports:
+  - port: 3000
+    name: graf-svc-port
+    targetPort: graf-cont-port
+    protocol: TCP
+    nodePort: 3000
